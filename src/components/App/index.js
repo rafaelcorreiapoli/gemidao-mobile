@@ -1,21 +1,26 @@
 import React from 'react';
-import { StyleSheet, Text, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity, Share} from 'react-native';
 import Button from '../Button'
+import ContactsList from '../ContactsList'
+import Profile from '../Profile'
+import Intro from '../Intro'
+
 
 const FACEBOOK_APP_ID = '123254084969737'
 
 import api from '../../api'
 
-const FlatButton = (Platform.OS === 'ios') ? TouchableOpacity : TouchableNativeFeedback
 
-const getFirstNumber = contact => contact.numbers && contact.numbers[0] && (contact.numbers[0].digits || contact.numbers[0].number) || ''
+
+
+const getFirstNumber = numbers => numbers && numbers[0] && (numbers[0].digits || numbers[0].number) || ''
+const stripNumber = number => number && number.replace(/\+55|-|\(|\)| /g,'').trim()
 export default class App extends React.Component {
   constructor(props) {
     super(props)
 
     this.handleBuyGemidao = this.handleBuyGemidao.bind(this)
     this.handleMakeGemidaoCall = this.handleMakeGemidaoCall.bind(this)
-    this.authenticate = this.authenticate.bind(this)
     this.getFacebookToken = this.getFacebookToken.bind(this)
     this.validateToken = this.validateToken.bind(this)
     this.storeJWTToken = this.storeJWTToken.bind(this)
@@ -23,6 +28,8 @@ export default class App extends React.Component {
     this.handleFacebookButtonPress = this.handleFacebookButtonPress.bind(this)
     this.handleTextChange = this.handleTextChange.bind(this)
     this.handleLogout = this.handleLogout.bind(this)
+    this.handlePressContactFrom = this.handlePressContactFrom.bind(this)
+    this.handlePressContactTo = this.handlePressContactTo.bind(this)
 
     this.state = {
       loggedIn: false,
@@ -71,19 +78,33 @@ export default class App extends React.Component {
           NAME_PREFIX
         ]
       });
-
       if (contacts.total > 0) {
-        const contactsArray = Object.keys(contacts.data).reduce((acc, id) => [...acc, contacts.data[id]], [])
+        const seenIds = {}
+        const contactsArray = Object.keys(contacts.data).reduce((acc, index) => {
+          const contact = contacts.data[index]
+          const id = contact.id
+
+          if (seenIds[id]) {
+            return acc
+          }
+          seenIds[id] = true
+          return [...acc, contacts.data[index]]
+        }, [])
 
         this.setState({
-          contacts: contactsArray.map(contact => ({
-            id: contact.id,
-            name: contact.name,
-            numbers: contact.phoneNumbers && contact.phoneNumbers.map(number => ({
+          contacts: contactsArray.map(contact => {
+            const numbers = contact.phoneNumbers && contact.phoneNumbers.map(number => ({
               digits: (number.digits || number.number),
               label: number.label
             }))
-          }))
+            return {
+              id: contact.id,
+              name: contact.name,
+              numbers: numbers,
+              firstNumber: getFirstNumber(numbers)
+            }
+
+          })
         })
       }
     }
@@ -93,25 +114,56 @@ export default class App extends React.Component {
 
   }
   async handleBuyGemidao() {
-    this.setState({
-      loadingBuy: true
-    })
-    const quantity = 1
-    api.buyGemidao(quantity)
-    .then((data) => {
-      Alert.alert('Sucesso', `${quantity} gemidões comprados, divirta-se!`)
-      this.setState({
-        gemidoesLeft: this.state.gemidoesLeft + quantity
+
+    const startBuyProcess = () => {
+      Share.share({
+        message: 'Envie chamadas com o gemidão do zap a partir de outros números! https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt',
+        title: 'Gemidão do Zap',
+        url: 'https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt'
+      }, {
+        dialogTitle: 'Gemidão do Zap',
       })
-    })
-    .catch((err) => {
-      this.handleError(err)
-    })
-    .finally(() => {
-      this.setState({
-        loadingBuy: false
+      .then((action, activityType) => {
+        if (action.action === Share.sharedAction) {
+          this.setState({
+            loadingBuy: true
+          })
+          const quantity = 1
+          api.buyGemidao(quantity)
+          .then((data) => {
+            const text = quantity > 1 ? `${quantity} gemidões adquiridos` : `${quantity} gemidão adquirido`
+            Alert.alert('Sucesso', text)
+            this.setState({
+              gemidoesLeft: this.state.gemidoesLeft + quantity
+            })
+          })
+          .catch((err) => {
+            this.handleError(err)
+          })
+          .finally(() => {
+            this.setState({
+              loadingBuy: false
+            })
+          })
+        } else {
+          Alert.alert('Erro', 'Tente novamente!')
+        }
       })
-    })
+      .catch(err => {
+        this.handleError('Erro', err)
+      })
+    }
+
+
+    Alert.alert(
+      'Adquirir gemidões',
+      'Compartilhe nas redes sociais para ganhar mais gemidões!',
+      [
+        {text: 'Ok!', onPress: () => startBuyProcess()},
+        {text: 'Cancel', style: 'cancel'},
+      ],
+      { cancelable: true }
+    )
   }
 
   async handleMakeGemidaoCall() {
@@ -124,6 +176,9 @@ export default class App extends React.Component {
     } = this.state
     api.makeGemidaoCall(from, to)
     .then(data => {
+      if (data.error) {
+        return Alert.alert('Erro', data.error)
+      }
       Alert.alert('Sucesso', 'Seu gemidão foi enviado!')
       this.setState({
         loadingGemidaoCall: false,
@@ -134,16 +189,12 @@ export default class App extends React.Component {
     })
     .catch(err => {
       this.handleError('handleMakeGemidaoCall', err)
+    })
+    .finally(() => {
       this.setState({
         loadingGemidaoCall: false
       })
     })
-  }
-
-  async authenticate(facebookToken) {
-
-
-    await AsyncStorage.setItem('@MySuperStore:key', 'I like to save it.');
   }
 
   async getFacebookToken() {
@@ -190,13 +241,14 @@ export default class App extends React.Component {
         if(response.error) {
           throw new Error(error)
         }
-
-
         await this.storeJWTToken(response.token)
         api.setToken(response.token)
         this.setLoggedIn(response.user)
       }
       catch (err) {
+        this.setState({
+          loading: false,
+        })
         this.handleError('handleFacebookButtonPress', err)
       }
 
@@ -238,6 +290,7 @@ export default class App extends React.Component {
       })
     }
   }
+
   async handleLogout() {
     api.clearToken()
     try {
@@ -253,24 +306,19 @@ export default class App extends React.Component {
       this.handleError('handleLogout', err)
     }
   }
-  handlePressContact(kind, contact) {
-    const firstNumber = getFirstNumber(contact)
 
-    const strippedFirstNumber = firstNumber && firstNumber.replace(/-|\(|\)| /g,'').trim()
 
+  handlePressContactFrom(number) {
+    const strippedNumber = stripNumber(number)
     this.setState({
-      [kind]: strippedFirstNumber
+      from: strippedNumber
     })
   }
-  renderContact(kind, contact) {
-    return (
-      <FlatButton  onPress={() => this.handlePressContact(kind, contact)}>
-        <View style={contactStyles.container}>
-          <Text style={contactStyles.name}>{contact.name}</Text>
-          <Text style={contactStyles.number}>{getFirstNumber(contact)}</Text>
-        </View>
-      </FlatButton>
-    )
+  handlePressContactTo(number){
+    const strippedNumber = stripNumber(number)
+    this.setState({
+      to: strippedNumber
+    })
   }
 
   getHint() {
@@ -281,7 +329,7 @@ export default class App extends React.Component {
     } = this.state
 
     if (!gemidoesLeft) {
-      return 'Compre mais gemidões para continuar enviado'
+      return 'Compre mais gemidões para continuar'
     }
     if (!from || !to) {
       return 'Escolha da lista ou digite os números'
@@ -314,43 +362,46 @@ export default class App extends React.Component {
 
     if (!loggedIn) {
       return (
-        <View style={styles.container}>
-          <Text style={styles.mainTitle}>Chamada Gemidão do Zap!</Text>
-          <Text style={styles.mainText}>Escolha duas pessoas da lista de sua lista de contato. O aplicativo fará uma chamada a partir de um número escolhido (utilizando máscara de bina) e, quando a vítima atender...</Text>
-          <Text style={styles.mainText}>AAAWN OOOWN NHAAA AWWWWN AAAAAH</Text>
-          <Button title="Entrar com Facebook" color="#3b5998" onPress={this.handleFacebookButtonPress.bind(this)}/>
-        </View>
+        <Intro
+          onFacebookPress={this.handleFacebookButtonPress}
+        />
       )
     }
     return (
       <View style={styles.container}>
-        <View style={styles.profileContainer}>
-          <Image source={{uri: picture}} resizeMode="contain" style={styles.avatar} />
-          <View style={styles.column}>
-            <Text style={styles.name}>{name}</Text>
-            <View style={styles.row}>
-              <Text style={styles.gemidoesRestantesLabel}>Gemidões restantes: </Text><Text style={styles.gemidoesRestantes}>{gemidoesLeft}</Text>
-            </View>
-          </View>
-          <Button title="Sair" color="tomato" onPress={this.handleLogout} style={{width: 50}} />
-        </View>
+        <Profile
+          onPressLogout={this.handleLogout}
+          name={name}
+          gemidoesLeft={gemidoesLeft}
+          picture={picture}
+        />
         <View style={[styles.row]}>
           <View style={[styles.column, {marginRight: 5}]}>
             <Text style={styles.title}>De: </Text>
-            <TextInput underlineColorAndroid="transparent" value={from} style={styles.textInput} keyboardType="number-pad" onChangeText={(text) => this.handleTextChange('from', text)} />
-            <FlatList
-              data={contacts}
-              keyExtractor={item => item.id}
-              renderItem={({item}) => this.renderContact('from', item)}
+            <TextInput
+              underlineColorAndroid="transparent"
+              value={from}
+              style={styles.textInput}
+              keyboardType="numeric"
+              placeholder="DDD + Número"
+              onChangeText={(text) => this.handleTextChange('from', text)} />
+            <ContactsList
+              contacts={contacts}
+              onClickContact={this.handlePressContactFrom}
             />
           </View>
           <View style={[styles.column, {marginLeft: 5}]}>
             <Text style={styles.title}>Vítima: </Text>
-            <TextInput underlineColorAndroid="transparent" value={to} style={styles.textInput} keyboardType="number-pad"  onChangeText={(text) => this.handleTextChange('to', text)}  />
-            <FlatList
-              data={contacts}
-              keyExtractor={item => item.id}
-              renderItem={({item}) => this.renderContact('to', item)}
+            <TextInput
+              underlineColorAndroid="transparent"
+              value={to}
+              style={styles.textInput}
+              keyboardType="numeric"
+              placeholder="DDD + Número"
+              onChangeText={(text) => this.handleTextChange('to', text)}  />
+            <ContactsList
+              contacts={contacts}
+              onClickContact={this.handlePressContactTo}
             />
           </View>
         </View>
@@ -364,7 +415,7 @@ export default class App extends React.Component {
             loading={loadingGemidaoCall}
             style={{flex: 1, marginRight: 5}}/>
           <Button
-            title="Comprar mais gemidões"
+            title="+ Gemidões"
             color="steelblue"
             onPress={this.handleBuyGemidao}
             loading={loadingBuy}
@@ -389,41 +440,16 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     margin: 10,
-    // backgroundColor: 'red',
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
     marginBottom: 20,
-    // flex: 1
   },
   hint: {
-    fontSize: 16,
+    fontSize: 12,
     marginBottom: 10,
     paddingHorizontal: 10,
-  },
-  mainTitle: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  mainText: {
-    fontSize: 16,
-    color: '#222',
-    textAlign: 'center',
-    marginHorizontal: 20,
-    marginBottom: 20
-  },
-  name: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  gemidoesRestantesLabel: {
-    fontSize: 16,
-    color: '#999'
-  },
-  gemidoesRestantes: {
-    fontSize: 16,
-    fontWeight: '900'
   },
   title: {
     marginBottom: 4,
@@ -434,49 +460,17 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
     flexDirection: 'column',
-    // paddingHorizontal: 10,
   },
   textInput: {
     paddingHorizontal: 6,
     backgroundColor: '#fff',
     height: 40,
-    // flex: 1,
-    // backgroundColor: 'red'
     borderWidth: 1,
     borderColor: '#d3d3d3',
     borderRadius: 6,
-    // marginHorizontal: 6
-  },
-  avatar: {
-    // borderRadius: 25,
-    width: 50,
-    height: 50,
-    marginRight: 10,
   },
   row: {
     flex: 1,
     flexDirection: 'row'
   }
 });
-
-const contactStyles = StyleSheet.create({
-  contactsList: {
-    // marginHorizontal: 10
-  },
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    height: 50,
-    justifyContent: 'center'
-  },
-  number: {
-    color: '#999',
-    fontSize: 12
-  },
-  name: {
-    marginBottom: 4,
-  },
-  digits: {
-
-  }
-})

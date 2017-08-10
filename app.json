@@ -1,23 +1,27 @@
 {
   "expo": {
-    "name": "gemidao",
-    "description": "An empty new project",
+    "name": "Gemidão do Zap",
+    "description": "Faça chamadas com o gemidão do zap",
     "slug": "gemidao",
     "privacy": "public",
     "sdkVersion": "19.0.0",
     "version": "1.0.0",
     "orientation": "portrait",
     "primaryColor": "#cccccc",
-    "icon": "./assets/icons/app-icon.png",
+    "icon": "./src/assets/logo.png",
     "loading": {
-      "icon": "./assets/icons/loading-icon.png",
+      "icon": "./src/assets/logo.png",
       "hideExponentText": false
     },
     "packagerOpts": {
       "assetExts": ["ttf", "mp4"]
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rafaelribeirocorreia.gemidaodozap"
+    },
+    "android": {
+      "package": "com.rafaelribeirocorreia.gemidaodozap"
     }
   }
 }

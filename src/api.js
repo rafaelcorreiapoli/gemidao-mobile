@@ -1,6 +1,13 @@
 
 
-const endpoint = 'http://192.168.1.40:3000'
+let endpoint
+
+if (__DEV__) {
+  endpoint = 'http://192.168.1.40:3000'
+} else {
+  endpoint = 'https://gemidao-api.herokuapp.com'
+}
+
 
 
 const fetchJson = (endpoint, options = {}) => fetch(endpoint, {
