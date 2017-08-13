@@ -9,20 +9,20 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 10,
     flex: 1,
-    backgroundColor: '#e3e3e3',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bottomText: {
-    color: '#999'
+    color: '#FAFAFA'
   },
   mainTitle: {
+    color: '#FFF',
     fontSize: 20,
     marginBottom: 20,
   },
   mainText: {
+    color: '#FFF',
     fontSize: 16,
-    color: '#222',
     textAlign: 'center',
     marginHorizontal: 20,
     marginBottom: 20

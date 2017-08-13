@@ -16,13 +16,15 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     marginBottom: 2,
+    color: '#FFF'
   },
   gemidoesRestantesLabel: {
     fontSize: 14,
-    color: '#999'
+    color: '#EEE'
   },
   gemidoesRestantes: {
     fontSize: 14,
+    color: '#FFF',
     fontWeight: '900'
   },
   column: {
@@ -54,6 +56,6 @@ export default ({
         <Text style={styles.gemidoesRestantesLabel}>Gemidões restantes: </Text><Text style={styles.gemidoesRestantes}>{gemidoesLeft}</Text>
       </View>
     </View>
-    <Button title="Sair" color="tomato" onPress={onPressLogout} style={{width: 50}} />
+    <Button title="Sair" color="#e74c3c" onPress={onPressLogout} style={{width: 50}} />
   </View>
 )

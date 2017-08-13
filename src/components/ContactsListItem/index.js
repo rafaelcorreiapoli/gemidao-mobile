@@ -11,10 +11,11 @@ const styles = StyleSheet.create({
     height: 50,
   },
   number: {
-    color: '#999',
+    color: '#EEE',
     fontSize: 12
   },
   name: {
+    color: '#FFF',
     marginBottom: 4,
   },
 })

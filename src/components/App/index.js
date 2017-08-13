@@ -1,16 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity, Share} from 'react-native';
+import { StyleSheet, Text as RNText, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity, Share} from 'react-native';
 import Button from '../Button'
 import ContactsList from '../ContactsList'
 import Profile from '../Profile'
 import Intro from '../Intro'
-
+import Purchase from '../Purchase'
+import socket from '../../socket'
 
 const FACEBOOK_APP_ID = '123254084969737'
 
 import api from '../../api'
 
-
+const Text = ({style, ...props}) => <RNText {...props} style={[{color: '#FFF'}, style]} />
 
 
 const getFirstNumber = numbers => numbers && numbers[0] && (numbers[0].digits || numbers[0].number) || ''
@@ -30,6 +31,7 @@ export default class App extends React.Component {
     this.handleLogout = this.handleLogout.bind(this)
     this.handlePressContactFrom = this.handlePressContactFrom.bind(this)
     this.handlePressContactTo = this.handlePressContactTo.bind(this)
+    this.handleError = this.handleError.bind(this)
 
     this.state = {
       loggedIn: false,
@@ -39,7 +41,8 @@ export default class App extends React.Component {
       contacts: [],
       loading: true,
       loadingBuy: false,
-      loadingGemidaoCall: false
+      loadingGemidaoCall: false,
+      showBuy: false
     }
   }
 
@@ -51,7 +54,7 @@ export default class App extends React.Component {
 
   handleError(caller, err) {
     console.log(err)
-    Alert.alert(`Erro em ${caller}`, err.toString())
+    Alert.alert('Erro', `${err.toString()}`)
   }
 
   async fetchContacts() {
@@ -113,57 +116,60 @@ export default class App extends React.Component {
     }
 
   }
-  async handleBuyGemidao() {
 
-    const startBuyProcess = () => {
-      Share.share({
-        message: 'Envie chamadas com o gemidão do zap a partir de outros números! https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt',
-        title: 'Gemidão do Zap',
-        url: 'https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt'
-      }, {
-        dialogTitle: 'Gemidão do Zap',
-      })
-      .then((action, activityType) => {
-        if (action.action === Share.sharedAction) {
-          this.setState({
-            loadingBuy: true
-          })
-          const quantity = 1
-          api.buyGemidao(quantity)
-          .then((data) => {
-            const text = quantity > 1 ? `${quantity} gemidões adquiridos` : `${quantity} gemidão adquirido`
-            Alert.alert('Sucesso', text)
-            this.setState({
-              gemidoesLeft: this.state.gemidoesLeft + quantity
-            })
-          })
-          .catch((err) => {
-            this.handleError(err)
-          })
-          .finally(() => {
-            this.setState({
-              loadingBuy: false
-            })
-          })
-        } else {
-          Alert.alert('Erro', 'Tente novamente!')
-        }
-      })
-      .catch(err => {
-        this.handleError('Erro', err)
-      })
-    }
-
-
-    Alert.alert(
-      'Adquirir gemidões',
-      'Compartilhe nas redes sociais para ganhar mais gemidões!',
-      [
-        {text: 'Ok!', onPress: () => startBuyProcess()},
-        {text: 'Cancel', style: 'cancel'},
-      ],
-      { cancelable: true }
-    )
+  handleBuyGemidao() {
+    this.setState({
+      showBuy: true
+    })
+    // const startBuyProcess = () => {
+    //   Share.share({
+    //     message: 'Envie chamadas com o gemidão do zap a partir de outros números! https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt',
+    //     title: 'Gemidão do Zap',
+    //     url: 'https://play.google.com/store/apps/details?id=com.rafaelribeirocorreia.gemidaodozap&hl=pt'
+    //   }, {
+    //     dialogTitle: 'Gemidão do Zap',
+    //   })
+    //   .then((action, activityType) => {
+    //     if (action.action === Share.sharedAction) {
+    //       this.setState({
+    //         loadingBuy: true
+    //       })
+    //       const quantity = 1
+    //       api.buyGemidao(quantity)
+    //       .then((data) => {
+    //         const text = quantity > 1 ? `${quantity} gemidões adquiridos` : `${quantity} gemidão adquirido`
+    //         Alert.alert('Sucesso', text)
+    //         this.setState({
+    //           gemidoesLeft: this.state.gemidoesLeft + quantity
+    //         })
+    //       })
+    //       .catch((err) => {
+    //         this.handleError(err)
+    //       })
+    //       .finally(() => {
+    //         this.setState({
+    //           loadingBuy: false
+    //         })
+    //       })
+    //     } else {
+    //       Alert.alert('Erro', 'Tente novamente!')
+    //     }
+    //   })
+    //   .catch(err => {
+    //     this.handleError('Erro', err)
+    //   })
+    // }
+    //
+    //
+    // Alert.alert(
+    //   'Adquirir gemidões',
+    //   'Compartilhe nas redes sociais para ganhar mais gemidões!',
+    //   [
+    //     {text: 'Ok!', onPress: () => startBuyProcess()},
+    //     {text: 'Cancel', style: 'cancel'},
+    //   ],
+    //   { cancelable: true }
+    // )
   }
 
   async handleMakeGemidaoCall() {
@@ -174,11 +180,14 @@ export default class App extends React.Component {
       from,
       to
     } = this.state
-    api.makeGemidaoCall(from, to)
-    .then(data => {
-      if (data.error) {
-        return Alert.alert('Erro', data.error)
+
+    try {
+      const response = await api.makeGemidaoCall(from, to)
+      if (response.error) {
+        throw new Error(response.error)
       }
+
+
       Alert.alert('Sucesso', 'Seu gemidão foi enviado!')
       this.setState({
         loadingGemidaoCall: false,
@@ -186,15 +195,14 @@ export default class App extends React.Component {
         from: '',
         to: '',
       })
-    })
-    .catch(err => {
-      this.handleError('handleMakeGemidaoCall', err)
-    })
-    .finally(() => {
+    } catch (err) {
+      this.handleError('Fazer gemidão', err)
+    }
+    finally {
       this.setState({
         loadingGemidaoCall: false
       })
-    })
+    }
   }
 
   async getFacebookToken() {
@@ -243,7 +251,7 @@ export default class App extends React.Component {
         }
         await this.storeJWTToken(response.token)
         api.setToken(response.token)
-        this.setLoggedIn(response.user)
+        this.setLoggedIn(response.user, response.token)
       }
       catch (err) {
         this.setState({
@@ -255,7 +263,26 @@ export default class App extends React.Component {
     }
   }
 
-  setLoggedIn(user) {
+  handleCreditsLeft(creditsLeft) {
+    this.setState({
+      creditsLeft
+    })
+  }
+
+  handleGemidoesLeft(gemidoesLeft) {
+    console.log()
+    this.setState({
+      gemidoesLeft
+    })
+  }
+
+  setLoggedIn(user, token) {
+    socket.setToken(token)
+    socket.setCreditsLeftListener(this.handleCreditsLeft.bind(this))
+    socket.setGemidoesLeftListener(this.handleGemidoesLeft.bind(this))
+    socket.connect()
+
+
     this.setState({
       loading: false,
       loggedIn: true,
@@ -279,7 +306,7 @@ export default class App extends React.Component {
           await this.clearLocalJWTToken();
         }
         const user = me.user
-        this.setLoggedIn(user)
+        this.setLoggedIn(user, storedToken)
       }
       catch (err) {
         this.handleError('componentDidMount', err)
@@ -293,6 +320,8 @@ export default class App extends React.Component {
 
   async handleLogout() {
     api.clearToken()
+    socket.clearToken()
+    socket.disconnect()
     try {
       await this.clearLocalJWTToken()
       this.setState({
@@ -352,6 +381,15 @@ export default class App extends React.Component {
       loadingGemidaoCall,
     } = this.state
 
+    if (this.state.showBuy) {
+      return (
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
+        <Purchase />
+        <Button color="#f1c40f" title="Voltar" onPress={() => this.setState({showBuy: false})} />
+        </View>
+      )
+    }
+
     if (loading) {
       return (
         <View style={styles.container}>
@@ -362,9 +400,11 @@ export default class App extends React.Component {
 
     if (!loggedIn) {
       return (
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
         <Intro
           onFacebookPress={this.handleFacebookButtonPress}
         />
+        </View>
       )
     }
     return (
@@ -409,14 +449,14 @@ export default class App extends React.Component {
 
         <View style={{flexDirection: 'row', justifyContent: 'space-around', alignSelf: 'stretch'}}>
           <Button title="Enviar gemidão!"
-            color="green"
+            color="#1abc9c"
             onPress={this.handleMakeGemidaoCall}
             disabled={!gemidoesLeft || !from || !to || loadingGemidaoCall}
             loading={loadingGemidaoCall}
             style={{flex: 1, marginRight: 5}}/>
           <Button
             title="+ Gemidões"
-            color="steelblue"
+            color="#f1c40f"
             onPress={this.handleBuyGemidao}
             loading={loadingBuy}
             style={{flex: 1, marginLeft: 5}}
@@ -434,7 +474,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 10,
     flex: 1,
-    backgroundColor: '#e3e3e3',
+    backgroundColor: '#2ecc71',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -455,7 +495,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'left',
     fontSize: 12,
-    color: '#999'
+    color: '#FFF'
   },
   column: {
     flex: 1,

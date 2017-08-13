@@ -1,5 +1,4 @@
 
-
 let endpoint
 
 if (__DEV__) {
@@ -7,7 +6,6 @@ if (__DEV__) {
 } else {
   endpoint = 'https://gemidao-api.herokuapp.com'
 }
-
 
 
 const fetchJson = (endpoint, options = {}) => fetch(endpoint, {
@@ -85,6 +83,16 @@ class API {
         quantity
       }
     })
+  }
+
+  getItems() {
+    return this.request('/payments/items', {
+      method: 'GET'
+    })
+  }
+
+  getCheckoutUrl(itemId) {
+    return this.request(`/payments/checkout-url?itemId=${itemId}`)
   }
 }
 
