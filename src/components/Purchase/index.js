@@ -36,9 +36,10 @@ const itemStyles = StyleSheet.create({
     marginHorizontal: 10
   },
   buyButton: {
-    flex: 1,
-    width: 136,
+    width: 150,
+    height: 50,
     paddingTop: 10,
+    marginRight: 10,
     justifyContent: 'flex-end'
   }
 })
@@ -67,7 +68,7 @@ const ItemListItem = ({
 
     <TouchableOpacity onPress={() => onPressBuy(id)}>
       <Image
-        source={{uri: 'https://www.doutorcarro.com.br/wp-content/uploads/2012/09/Captura-de-Tela-2014-01-14-%C3%A0s-23.00.08.png'}}
+        source={{uri: 'http://static.wixstatic.com/media/5d4948_eba8dfa08a9a425a80db19c218c75dbc~mv2.png_srz_862_170_85_22_0.50_1.20_0.00_png_srz'}}
         resizeMode="contain"
         style={itemStyles.buyButton}
       />
@@ -151,9 +152,16 @@ export default class Purchase extends React.Component {
     )
     return (
       <View style={styles.container}>
-        {loading && LoadingOverlay}
 
-        <FlatList
+
+        {loading
+        ? (
+          <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+            <ActivityIndicator color="#FFF"/>
+            <Text style={{color: '#FFF'}}>Obtendo link para checkout da compra...</Text>
+          </View>
+        )
+        : <FlatList
             ItemSeparatorComponent={() => <View style={{height: 1, opacity: 0.5, marginVertical: 15, backgroundColor: '#ecf0f1'}} />}
             data={this.state.items}
             keyExtractor={(item, index) => `${item.id}`}
@@ -164,6 +172,7 @@ export default class Purchase extends React.Component {
               />
             )}
           />
+      }
       </View>
     )
   }

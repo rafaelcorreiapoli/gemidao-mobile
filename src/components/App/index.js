@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text as RNText, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity, Share} from 'react-native';
+import { StatusBar, StyleSheet, Text as RNText, View, Alert, AsyncStorage, ActivityIndicator, Image, FlatList, TouchableNativeFeedback, Picker, TextInput, Platform, TouchableOpacity, Share} from 'react-native';
 import Button from '../Button'
 import ContactsList from '../ContactsList'
 import Profile from '../Profile'
@@ -293,6 +293,8 @@ export default class App extends React.Component {
   }
 
   async componentDidMount() {
+
+    StatusBar.setBarStyle('light-content')
     this.fetchContacts()
     const storedToken = await this.getLocalJWTToken()
     if (storedToken) {
@@ -385,7 +387,7 @@ export default class App extends React.Component {
       return (
         <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
         <Purchase />
-        <Button color="#f1c40f" title="Voltar" onPress={() => this.setState({showBuy: false})} />
+        <Button color="#f1c40f" title="Voltar" onPress={() => this.setState({showBuy: false})} style={{ margin: 10}}/>
         </View>
       )
     }
@@ -393,7 +395,7 @@ export default class App extends React.Component {
     if (loading) {
       return (
         <View style={styles.container}>
-          <ActivityIndicator />
+          <ActivityIndicator color="#FFF"/>
         </View>
       )
     }

@@ -29,7 +29,7 @@ class SocketAPI {
 
   disconnect() {
     if (this.socket) {
-      Alert.alert('Socket', 'disconnecting')
+      // Alert.alert('Socket', 'disconnecting')
       this.socket.disconnect()
     }
   }
