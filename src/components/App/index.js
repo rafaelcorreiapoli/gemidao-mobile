@@ -293,6 +293,7 @@ export default class App extends React.Component {
   }
 
   async componentDidMount() {
+    Alert.alert("Atenção!", 'Ainda estamos tendo problemas com a operadora de telefonia. Você não conseguirá disparar gemidões mesmo tendo saldo em nosso sistema.')
 
     StatusBar.setBarStyle('light-content')
     this.fetchContacts()

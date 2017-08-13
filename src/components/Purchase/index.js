@@ -93,6 +93,8 @@ export default class Purchase extends React.Component {
   }
 
   async componentDidMount() {
+    Alert.alert("Atenção!", 'Ainda estamos tendo problemas com a operadora de telefonia. Não compre créditos ainda.')
+    
     try {
       const response = await api.getItems()
       this.setState({
