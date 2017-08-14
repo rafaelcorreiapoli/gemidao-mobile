@@ -9,6 +9,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#2ecc71'
+  },
+  disclaimer: {
+    paddingHorizontal: 10,
+    textAlign: 'center',
+    fontSize: 10,
+    color: '#FFF'
   }
 })
 
@@ -41,7 +47,7 @@ const itemStyles = StyleSheet.create({
     paddingTop: 10,
     marginRight: 10,
     justifyContent: 'flex-end'
-  }
+  },
 })
 
 function formatReal(n) {
@@ -175,6 +181,10 @@ export default class Purchase extends React.Component {
             )}
           />
       }
+
+      <Text style={styles.disclaimer}>Dependemos de um serviço externo de telefonia para fazer as chamadas, por isto, não podemos garantir seu correcto funcionamento.</Text>
+      <Text style={styles.disclaimer}>Contudo, se detectarmos que a chamada não foi feita com sucesso, iremos repor seus créditos</Text>
+      <Text style={styles.disclaimer}>Seus créditos não tem validade. Porém, se eventualmente a operadora de telefonia bloquear a brincadeira, não haverá devolução dos créditos previamente adquiridos.</Text>
       </View>
     )
   }
