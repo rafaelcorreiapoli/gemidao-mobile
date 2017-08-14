@@ -32,6 +32,7 @@ export default class App extends React.Component {
     this.handlePressContactFrom = this.handlePressContactFrom.bind(this)
     this.handlePressContactTo = this.handlePressContactTo.bind(this)
     this.handleError = this.handleError.bind(this)
+    this.handleChangeFilter = this.handleChangeFilter.bind(this)
 
     this.state = {
       loggedIn: false,
@@ -42,7 +43,8 @@ export default class App extends React.Component {
       loading: true,
       loadingBuy: false,
       loadingGemidaoCall: false,
-      showBuy: false
+      showBuy: false,
+      filterText: ''
     }
   }
 
@@ -93,21 +95,26 @@ export default class App extends React.Component {
           seenIds[id] = true
           return [...acc, contacts.data[index]]
         }, [])
+        .map(contact => {
+          const numbers = contact.phoneNumbers && contact.phoneNumbers.map(number => ({
+            digits: (number.digits || number.number),
+            label: number.label
+          }))
+          return {
+            id: contact.id,
+            name: contact.name,
+            numbers: numbers,
+            firstNumber: getFirstNumber(numbers)
+          }
+        })
+        const sortedArray = [...contactsArray].sort((a, b) => {
+                  if(a.name < b.name) return -1;
+                  if(a.name > b.name) return 1;
+                  return 0;
+                })
 
         this.setState({
-          contacts: contactsArray.map(contact => {
-            const numbers = contact.phoneNumbers && contact.phoneNumbers.map(number => ({
-              digits: (number.digits || number.number),
-              label: number.label
-            }))
-            return {
-              id: contact.id,
-              name: contact.name,
-              numbers: numbers,
-              firstNumber: getFirstNumber(numbers)
-            }
-
-          })
+          contacts: sortedArray
         })
       }
     }
@@ -370,6 +377,13 @@ export default class App extends React.Component {
     return 'Pronto para enviar Gemidão!'
 
   }
+
+  handleChangeFilter(filter) {
+    this.setState({
+      filter
+    })
+  }
+
   render() {
     const {
       name,
@@ -410,6 +424,11 @@ export default class App extends React.Component {
         </View>
       )
     }
+
+    const filteredContacts = contacts.filter(contact =>
+      new RegExp(this.state.filter, 'gi').test(contact.name) ||
+      new RegExp(this.state.filter, 'gi').test(contact.firstNumber))
+
     return (
       <View style={styles.container}>
         <Profile
@@ -417,6 +436,12 @@ export default class App extends React.Component {
           name={name}
           gemidoesLeft={gemidoesLeft}
           picture={picture}
+        />
+        <TextInput
+          value={this.state.filter}
+          style={[styles.textInput, styles.filterInput]}
+          placeholder="Buscar"
+          onChangeText={this.handleChangeFilter}
         />
         <View style={[styles.row]}>
           <View style={[styles.column, {marginRight: 5}]}>
@@ -429,7 +454,7 @@ export default class App extends React.Component {
               placeholder="DDD + Número"
               onChangeText={(text) => this.handleTextChange('from', text)} />
             <ContactsList
-              contacts={contacts}
+              contacts={filteredContacts}
               onClickContact={this.handlePressContactFrom}
             />
           </View>
@@ -443,7 +468,7 @@ export default class App extends React.Component {
               placeholder="DDD + Número"
               onChangeText={(text) => this.handleTextChange('to', text)}  />
             <ContactsList
-              contacts={contacts}
+              contacts={filteredContacts}
               onClickContact={this.handlePressContactTo}
             />
           </View>
@@ -480,6 +505,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#2ecc71',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterInput: {
+    alignSelf: 'stretch',
+    marginBottom: 10,
   },
   profileContainer: {
     margin: 10,
