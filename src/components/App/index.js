@@ -441,6 +441,7 @@ export default class App extends React.Component {
           value={this.state.filter}
           style={[styles.textInput, styles.filterInput]}
           placeholder="Buscar"
+          underlineColorAndroid="transparent"
           onChangeText={this.handleChangeFilter}
         />
         <View style={[styles.row]}>
