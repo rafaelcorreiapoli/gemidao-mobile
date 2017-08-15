@@ -212,14 +212,12 @@ export default class App extends React.Component {
     }
   }
 
-  async getFacebookToken() {
-    const { type, token } = await Expo.Facebook.logInWithReadPermissionsAsync(FACEBOOK_APP_ID, {
-        permissions: ['public_profile'],
-      });
-    if (type === 'success') {
-      return token
-    }
-    return false
+  getFacebookToken() {
+    // const { type, token } =
+
+    return Expo.Facebook.logInWithReadPermissionsAsync(FACEBOOK_APP_ID, {
+      permissions: ['public_profile'],
+    });
   }
   async validateToken() {
 
@@ -249,24 +247,28 @@ export default class App extends React.Component {
     this.setState({
       loading: true,
     })
-    const token = await this.getFacebookToken()
-    if (token) {
-      try {
+
+    try {
+      const {type, token} = await this.getFacebookToken()
+      if (type === 'success') {
         const response = await api.loginWithFacebook(token)
-        if(response.error) {
+        if (response.error) {
           throw new Error(error)
         }
         await this.storeJWTToken(response.token)
         api.setToken(response.token)
         this.setLoggedIn(response.user, response.token)
+      } else {
+        Alert.alert('Erro', 'Não conseguiu obter credenciais do facebook.')
       }
-      catch (err) {
-        this.setState({
-          loading: false,
-        })
-        this.handleError('handleFacebookButtonPress', err)
-      }
-
+    }
+    catch (err) {
+      this.handleError('handleFacebookButtonPress', err)
+    }
+    finally {
+      this.setState({
+        loading: false,
+      })
     }
   }
 
