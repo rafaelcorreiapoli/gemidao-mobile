@@ -98,7 +98,8 @@ export default class App extends React.Component {
           PHONE_NUMBERS,
           EMAILS,
           NAME_PREFIX
-        ]
+        ],
+        pageSize: 200
       });
       if (contacts.total > 0) {
         const seenIds = {}
