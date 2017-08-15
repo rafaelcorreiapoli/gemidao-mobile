@@ -121,14 +121,14 @@ export default class App extends React.Component {
             id: contact.id,
             name: contact.name,
             numbers: numbers,
-            firstNumber: getFirstNumber(numbers)
+            firstNumber: stripNumber(getFirstNumber(numbers))
           }
         })
         const sortedArray = [...contactsArray].sort((a, b) => {
-                  if(a.name < b.name) return -1;
-                  if(a.name > b.name) return 1;
-                  return 0;
-                })
+          if(a.name < b.name) return -1;
+          if(a.name > b.name) return 1;
+          return 0;
+        })
 
         this.setState({
           contacts: sortedArray
@@ -426,7 +426,7 @@ export default class App extends React.Component {
 
     if (showCallStatus) {
       return (
-        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#27ae60'}}>
           <CallStatus
             onClickBack={this.handleClickCallStatusBack}
             victimName={this.state.victimName}
@@ -437,7 +437,7 @@ export default class App extends React.Component {
     }
     if (this.state.showBuy) {
       return (
-        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#27ae60'}}>
         <Purchase />
         <Button color="#f1c40f" title="Voltar" onPress={() => this.setState({showBuy: false})} style={{ margin: 10}}/>
         </View>
@@ -454,7 +454,7 @@ export default class App extends React.Component {
 
     if (!loggedIn) {
       return (
-        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#27ae60'}}>
         <Intro
           onFacebookPress={this.handleFacebookButtonPress}
         />
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 10,
     flex: 1,
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#27ae60',
     alignItems: 'center',
     justifyContent: 'center',
   },

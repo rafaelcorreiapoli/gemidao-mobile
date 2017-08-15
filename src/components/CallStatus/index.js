@@ -11,7 +11,6 @@ import Button from '../Button'
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: 'red'
   },
   statusContainer: {
     flex: 1,
@@ -20,7 +19,8 @@ const styles = StyleSheet.create({
   },
   statusBox: {
     paddingVertical: 60,
-    paddingHorizontal: 20,
+    alignSelf: 'stretch',
+    marginHorizontal: 10,
     borderRadius: 10
   },
   status: {

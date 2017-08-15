@@ -8,7 +8,7 @@ const logo = require('../../assets/logo.png')
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2ecc71'
+    backgroundColor: '#27ae60'
   },
   disclaimer: {
     paddingHorizontal: 10,
