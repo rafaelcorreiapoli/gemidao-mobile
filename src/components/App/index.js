@@ -315,6 +315,9 @@ export default class App extends React.Component {
     socket.connect()
 
 
+    if (!user.gemidoesLeft) {
+      Alert.alert('Atenção', 'Você está sem Gemidões disponíveis. Clique no botão "+ Gemidões"')
+    }
     this.setState({
       loading: false,
       loggedIn: true,
