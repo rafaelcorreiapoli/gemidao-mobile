@@ -301,7 +301,6 @@ export default class App extends React.Component {
   }
 
   handleGemidoesLeft(gemidoesLeft) {
-    console.log()
     this.setState({
       gemidoesLeft
     })
@@ -316,7 +315,7 @@ export default class App extends React.Component {
 
 
     if (!user.gemidoesLeft) {
-      Alert.alert('Atenção', 'Você está sem Gemidões disponíveis. Clique no botão "+ Gemidões"')
+      Alert.alert('Sem Gemidões?', 'Estamos com promoções especiais para Gemidões! Clique em "+ Gemidões" para conferir')
     }
     this.setState({
       loading: false,
