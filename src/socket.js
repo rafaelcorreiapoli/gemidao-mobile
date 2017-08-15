@@ -7,6 +7,11 @@ if (__DEV__) {
   endpoint = 'https://gemidao-api.herokuapp.com'
 }
 
+export const WAITING = 'WAITING'
+export const RINGING = 'RINGING'
+export const TALKING = 'TALKING'
+export const FINISHED = 'FINISHED'
+
 class SocketAPI {
   token = null
   constructor(endpoint) {
@@ -17,6 +22,9 @@ class SocketAPI {
   }
   setCreditsLeftListener(onCreditsLeft) {
     this.onCreditsLeft = onCreditsLeft
+  }
+  setCallStatusListener(callStatusListener) {
+    this.callStatusListener = callStatusListener
   }
 
   setToken(token) {
@@ -54,6 +62,10 @@ class SocketAPI {
     socket.on('creditsLeft', message => {
       // Alert.alert('message', message.toString())
       this.onCreditsLeft && this.onCreditsLeft(message)
+    })
+
+    socket.on('callStatus', message => {
+      this.callStatusListener && this.callStatusListener(message)
     })
   }
 }

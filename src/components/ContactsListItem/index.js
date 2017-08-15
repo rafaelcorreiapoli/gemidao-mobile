@@ -25,7 +25,7 @@ export default ({
   firstNumber,
   onClick,
 }) => (
-  <FlatButton  onPress={() => onClick(firstNumber)}>
+  <FlatButton  onPress={() => onClick(firstNumber, name)}>
     <View style={styles.container}>
       <Text style={styles.name}>{name}</Text>
       <Text style={styles.number}>{firstNumber}</Text>

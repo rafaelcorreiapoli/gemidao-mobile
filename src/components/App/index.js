@@ -5,9 +5,10 @@ import ContactsList from '../ContactsList'
 import Profile from '../Profile'
 import Intro from '../Intro'
 import Purchase from '../Purchase'
-import socket from '../../socket'
-
+import socket, { WAITING } from '../../socket'
+import CallStatus from '../CallStatus'
 const FACEBOOK_APP_ID = '123254084969737'
+
 
 import api from '../../api'
 
@@ -33,7 +34,8 @@ export default class App extends React.Component {
     this.handlePressContactTo = this.handlePressContactTo.bind(this)
     this.handleError = this.handleError.bind(this)
     this.handleChangeFilter = this.handleChangeFilter.bind(this)
-
+    this.handleClickCallStatusBack = this.handleClickCallStatusBack.bind(this)
+    this.handleCallStatusUpdate = this.handleCallStatusUpdate.bind(this)
     this.state = {
       loggedIn: false,
       name: '',
@@ -44,11 +46,26 @@ export default class App extends React.Component {
       loadingBuy: false,
       loadingGemidaoCall: false,
       showBuy: false,
-      filterText: ''
+      filterText: '',
+      showCallStatus: false,
+      victimName: ''
     }
   }
 
+  handleCallStatusUpdate(status) {
+    this.setState({
+      callStatus: status
+    })
+  }
+
+  handleClickCallStatusBack() {
+    this.setState({
+      showCallStatus: false
+    })
+  }
   handleTextChange(kind, text) {
+    let setVictimName = {}
+
     this.setState({
       [kind]: text
     })
@@ -195,12 +212,17 @@ export default class App extends React.Component {
       }
 
 
-      Alert.alert('Sucesso', 'Seu gemidão foi enviado!')
+      // Alert.alert('Sucesso', 'Seu gemidão foi enviado!')
+      const victim = this.state.contacts.find(contact => contact.firstNumber === to)
+
       this.setState({
         loadingGemidaoCall: false,
         gemidoesLeft: this.state.gemidoesLeft - 1,
         from: '',
         to: '',
+        victimName: victim  ? victim.name : to,
+        showCallStatus: true,
+        callStatus: WAITING,
       })
     } catch (err) {
       this.handleError('Fazer gemidão', err)
@@ -289,6 +311,7 @@ export default class App extends React.Component {
     socket.setToken(token)
     socket.setCreditsLeftListener(this.handleCreditsLeft.bind(this))
     socket.setGemidoesLeftListener(this.handleGemidoesLeft.bind(this))
+    socket.setCallStatusListener(this.handleCallStatusUpdate.bind(this))
     socket.connect()
 
 
@@ -358,7 +381,7 @@ export default class App extends React.Component {
   handlePressContactTo(number){
     const strippedNumber = stripNumber(number)
     this.setState({
-      to: strippedNumber
+      to: strippedNumber,
     })
   }
 
@@ -398,8 +421,20 @@ export default class App extends React.Component {
       to,
       loadingBuy,
       loadingGemidaoCall,
+      showCallStatus
     } = this.state
 
+    if (showCallStatus) {
+      return (
+        <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
+          <CallStatus
+            onClickBack={this.handleClickCallStatusBack}
+            victimName={this.state.victimName}
+            status={this.state.callStatus}
+          />
+        </View>
+      )
+    }
     if (this.state.showBuy) {
       return (
         <View style={{flex: 1, paddingTop: 30, backgroundColor: '#2ecc71'}}>
