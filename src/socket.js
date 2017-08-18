@@ -2,7 +2,7 @@ import io from 'socket.io-client'
 let endpoint
 import { Alert } from 'react-native'
 if (__DEV__) {
-  endpoint = 'http://192.168.1.40:3000'
+  endpoint = 'http://192.168.1.40:3001'
 } else {
   endpoint = 'https://gemidao-api.herokuapp.com'
 }
@@ -45,6 +45,8 @@ class SocketAPI {
   connect() {
     const socket = io(`${this.endpoint}?token=${this.token}`)
 
+
+
     socket.on('connect', () => {
       // Alert.alert('connect', 'ok')
       this.socket = socket
@@ -67,6 +69,7 @@ class SocketAPI {
     socket.on('callStatus', message => {
       this.callStatusListener && this.callStatusListener(message)
     })
+
   }
 }
 

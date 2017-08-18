@@ -5,7 +5,10 @@ import ContactsList from '../ContactsList'
 import Profile from '../Profile'
 import Intro from '../Intro'
 import Purchase from '../Purchase'
-import socket, { WAITING } from '../../socket'
+// import socket, { WAITING } from '../../socket'
+
+import * as socketActions from '../../socket2'
+
 import CallStatus from '../CallStatus'
 const FACEBOOK_APP_ID = '123254084969737'
 
@@ -50,15 +53,25 @@ export default class App extends React.Component {
       showCallStatus: false,
       victimName: ''
     }
+
+    socketActions.socket.on('singleCall', message => {
+      this.handleCallStatusUpdate({status: message.data.status})
+    })
+    socketActions.socket.on('gemidoesLeft', ({data}) => {
+      this.handleGemidoesLeft(data)
+    })
   }
 
-  handleCallStatusUpdate(status) {
+  handleCallStatusUpdate({ status }) {
     this.setState({
       callStatus: status
     })
   }
 
   handleClickCallStatusBack() {
+    socketActions.unsubscribe('singleCall', {
+      callId: this.state.callId
+    })
     this.setState({
       showCallStatus: false
     })
@@ -212,6 +225,12 @@ export default class App extends React.Component {
         throw new Error(response.error)
       }
 
+      const callId = response.data._id
+      socketActions.subscribe('singleCall', {
+        callId
+      }, (response) => {
+        console.log(response)
+      })
 
       // Alert.alert('Sucesso', 'Seu gemidão foi enviado!')
       const victim = this.state.contacts.find(contact => contact.firstNumber === to)
@@ -221,9 +240,10 @@ export default class App extends React.Component {
         gemidoesLeft: this.state.gemidoesLeft - 1,
         from: '',
         to: '',
+        callId,
         victimName: victim  ? victim.name : to,
         showCallStatus: true,
-        callStatus: WAITING,
+        callStatus: 'preparing',
       })
     } catch (err) {
       this.handleError('Fazer gemidão', err)
@@ -308,11 +328,18 @@ export default class App extends React.Component {
   }
 
   setLoggedIn(user, token) {
-    socket.setToken(token)
-    socket.setCreditsLeftListener(this.handleCreditsLeft.bind(this))
-    socket.setGemidoesLeftListener(this.handleGemidoesLeft.bind(this))
-    socket.setCallStatusListener(this.handleCallStatusUpdate.bind(this))
-    socket.connect()
+    socketActions.authenticate(token)
+    .then(data => {
+      console.log(data)
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
+    // socket.setToken(token)
+    // socket.setCreditsLeftListener(this.handleCreditsLeft.bind(this))
+    // socket.setGemidoesLeftListener(this.handleGemidoesLeft.bind(this))
+    // socket.setCallStatusListener(this.handleCallStatusUpdate.bind(this))
+    // socket.connect()
 
 
     if (!user.gemidoesLeft) {
@@ -358,8 +385,8 @@ export default class App extends React.Component {
 
   async handleLogout() {
     api.clearToken()
-    socket.clearToken()
-    socket.disconnect()
+    // socket.clearToken()
+    // socket.disconnect()
     try {
       await this.clearLocalJWTToken()
       this.setState({

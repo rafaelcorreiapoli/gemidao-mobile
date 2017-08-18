@@ -2,7 +2,7 @@
 let endpoint
 
 if (__DEV__) {
-  endpoint = 'http://192.168.1.40:3000'
+  endpoint = 'http://192.168.1.40:3001'
 } else {
   endpoint = 'https://gemidao-api.herokuapp.com'
 }

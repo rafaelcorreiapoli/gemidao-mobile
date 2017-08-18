@@ -1,11 +1,5 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
-import {
-  WAITING,
-  RINGING,
-  TALKING,
-  FINISHED
-} from '../../socket'
 import Button from '../Button'
 
 const styles = StyleSheet.create({
@@ -34,25 +28,25 @@ const styles = StyleSheet.create({
 })
 const getColorForStatus = (status) => {
   switch (status) {
-    case WAITING:
+    case 'preparing':
       return '#3498db'
-    case RINGING:
+    case 'ringing':
       return `#9b59b6`
-    case TALKING:
+    case 'answer':
       return `#16a085`
-    case FINISHED:
+    case 'hangup':
       return `#e74c3c`
   }
 }
 const getTextForStatus = (status, victimName) => {
   switch (status) {
-    case WAITING:
+    case 'preparing':
       return `Preparando ligação para ${victimName}...`
-    case RINGING:
+    case 'ringing':
       return `O telefone de ${victimName} está tocando...`
-    case TALKING:
+    case 'answer':
       return `${victimName} atendeu...`
-    case FINISHED:
+    case 'hangup':
       return `${victimName} desligou!`
   }
 }
